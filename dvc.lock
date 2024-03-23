@@ -1,0 +1,24 @@
+schema: '2.0'
+stages:
+  qdrant_init_collection:
+    cmd: poetry run python -m src.data.init_qdrant_collection data/raw/sentences-limit-0.parquet
+      data/raw/embeds_limit-0_chunk_split.cloudpickle data/interim/qdrant_collection_status.json
+      --collection_name=livedoor_news --limit=0
+    deps:
+    - path: data/raw/embeds_limit-0_chunk_split.cloudpickle
+      hash: md5
+      md5: cb04b6bd545a0f6929eaad288e3d2059
+      size: 22631563
+    - path: data/raw/sentences-limit-0.parquet
+      hash: md5
+      md5: 100f5980cd44f4a4a201471be8ac6076
+      size: 29648264
+    - path: src/data/init_qdrant_collection.py
+      hash: md5
+      md5: 572240d9d514063286d9a8f50d85cd08
+      size: 5069
+    outs:
+    - path: data/interim/qdrant_collection_status.json
+      hash: md5
+      md5: f779d97a6926e3be66152c93f79c3efd
+      size: 145
