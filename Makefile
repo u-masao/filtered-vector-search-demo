@@ -26,7 +26,7 @@ lint:
 
 ## run api backend
 api:
-	poetry run uvicorn src.api.main:app --reload --reload-dir src/api
+	cd src/api ; poetry run uvicorn main:app --reload
 
 ## run ui
 ui:
