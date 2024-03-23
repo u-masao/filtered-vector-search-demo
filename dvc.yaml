@@ -1,0 +1,14 @@
+stages:
+  qdrant_init_collection:
+    cmd: >-
+      poetry run python -m src.data.init_qdrant_collection
+      data/raw/sentences-limit-0.parquet
+      data/raw/embeds_limit-0_chunk_split.cloudpickle
+      data/interim/qdrant_collection_status.json
+      --collection_name=livedoor_news
+    deps:
+    - src/data/init_qdrant_collection.py
+    - data/raw/sentences-limit-0.parquet
+    - data/raw/embeds_limit-0_chunk_split.cloudpickle
+    outs:
+    - data/interim/qdrant_collection_status.json
