@@ -90,3 +90,6 @@ target/
 
 # storage
 /storage/
+
+# mlflow cache
+/mlruns/
