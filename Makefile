@@ -24,6 +24,10 @@ lint:
 	poetry run black src -l 79
 	poetry run flake8 src 
 
+## run api backend
+api:
+	poetry run uvicorn src.api.main:app --reload --reload-dir src/api
+
 ## run ui
 ui:
 	poetry run python -m src/visualization/visualize.py
