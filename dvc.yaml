@@ -6,6 +6,7 @@ stages:
       data/raw/embeds_limit-0_chunk_split.cloudpickle
       data/interim/qdrant_collection_status.json
       --collection_name=livedoor_news
+      --limit=0
     deps:
     - src/data/init_qdrant_collection.py
     - data/raw/sentences-limit-0.parquet
