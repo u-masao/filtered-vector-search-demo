@@ -7,6 +7,8 @@ stages:
       data/interim/qdrant_collection_status.json
       --collection_name=livedoor_news
       --limit=0
+      --title_limit=20
+      --sentence_limit=100
     deps:
     - src/data/init_qdrant_collection.py
     - data/raw/sentences-limit-0.parquet

@@ -31,15 +31,19 @@ def load_dataset(text_filepath, embeds_filepath):
     return text_df, embeds
 
 
-def build_features(text_df):
+def build_features(text_df, title_limit=20, sentence_limit=100):
 
     text_df = (
         text_df.with_columns(
             text_df["sentence"].str.len_bytes().alias("sentence_length")
         )
-        .with_columns(text_df["title"].str.slice(0, 40).alias("title_summary"))
         .with_columns(
-            text_df["sentence"].str.slice(0, 300).alias("sentence_summary")
+            text_df["title"].str.slice(0, title_limit).alias("title_summary")
+        )
+        .with_columns(
+            text_df["sentence"]
+            .str.slice(0, sentence_limit)
+            .alias("sentence_summary")
         )
     )
     return text_df
@@ -63,7 +67,11 @@ def init_qdrant_collection(kwargs):
         embeds = embeds[: kwargs["limit"]]
 
     # build features
-    text_df = build_features(text_df)
+    text_df = build_features(
+        text_df,
+        title_limit=kwargs["title_limit"],
+        sentence_limit=kwargs["sentence_limit"],
+    )
 
     # init qdrant client
     client = qdrant_client.QdrantClient(
@@ -159,6 +167,8 @@ def init_qdrant_collection(kwargs):
 @click.option("--qdrant_port", type=int, default=6333)
 @click.option("--mlflow_run_name", type=str, default="develop")
 @click.option("--limit", type=int, default=0)
+@click.option("--title_limit", type=int, default=20)
+@click.option("--sentence_limit", type=int, default=100)
 def main(**kwargs):
     # init logging
     logger = logging.getLogger(__name__)
