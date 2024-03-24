@@ -42,33 +42,49 @@ async def startup_event():
 
 
 # Qdrant への問い合わせ
-def search(query_vector, with_vectors=False, with_payload=False):
-    logger = logging.getLogger(__name__)
+def search(
+    query_vector, with_vectors=False, with_payload=False, filter_category=None
+):
     # search
     ts = time.perf_counter()
-    search_result = client.search(
-        collection_name=config["collection_name"],
-        query_vector=query_vector,
-        query_filter=models.Filter(
+
+    query_filter = None
+    if filter_category is not None:
+        query_filter = models.Filter(
             must=[
                 models.FieldCondition(
                     key="category",
-                    match=models.MatchValue(value="sports-watch"),
+                    match=models.MatchValue(value=filter_category),
                 ),
             ],
-        ),
+        )
+    search_result = client.search(
+        collection_name=config["collection_name"],
+        query_vector=query_vector,
+        query_filter=query_filter,
         limit=5,
         search_params=models.SearchParams(hnsw_ef=128, exact=False),
         with_vectors=with_vectors,
         with_payload=with_payload,
     )
     search_elapsed_time = time.perf_counter() - ts
-    logger.info(f"search_result: \n{search_result}")
-    logger.info(f"search_elapsed_time: \n{search_elapsed_time}")
-    return search_result
+    return {"items": search_result, "search_elapsed_time": search_elapsed_time}
 
 
 @app.get("/embed")
-async def get_embedding(sentence: str):
+async def get_embedding(
+    sentence: str,
+    with_vectors: bool = False,
+    with_payload: bool = False,
+    filter_category: str = None,
+):
+    if filter_category == "":
+        filter_category = None
+
     embedding = model.encode(sentence)
-    return search(embedding)
+    return search(
+        embedding,
+        with_vectors=with_vectors,
+        with_payload=with_payload,
+        filter_category=filter_category,
+    )

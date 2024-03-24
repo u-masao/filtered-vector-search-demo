@@ -1,6 +1,85 @@
-<html>
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <link rel="stylesheet" href="https://unpkg.com/sakura.css/css/sakura.css" media="screen" />
+    <link rel="stylesheet" href="https://unpkg.com/sakura.css/css/sakura-dark.css" media="screen and (prefers-color-scheme: dark)" />
+    <link rel="stylesheet" href="css/custom.css" />
+    <link rel="shortcut icon" type="image/x-icon" href="favicon.ico" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Filtered Vector Search Demo</title>
+</head>
 <body>
-<p>helo</p>
+    <h1>Filtered Vector Search Demo</h1>
+    <form id="queryForm">
+        <label for="sentenceInput">検索文字列:</label>
+        <input type="text" id="sentenceInput" name="sentence">
+        <label for="categorySelect">カテゴリ:</label>
+        <select id="categorySelect">
+            <option value="">カテゴリを絞り込むことができます</option>
+
+        </select>
+        <button type="submit">送信</button>
+    </form>
+    <div id="results"></div>
+
+    <script>
+
+        function displayResults(response) {
+            console.log(response);
+            var html = '<ul class="item-list">';
+            for ( var i = 0 ;i<response.items.length; i++){
+                html += '<li>';
+                html += Object.keys(response.items[i]);
+                html += response.items[i].id;
+                html += '</li>';
+            }
+            html += '</ul>';
+            document.getElementById('results').innerHTML = html;
+        }
+
+        /* 初期化 */
+        window.onload = function(){
+            var categories = [
+                'topic-news', 'smax', 'peachy', 'kaden-channel', 'sports-watch',
+                'it-life-hack', 'livedoor-homme', 'dokujo-tsushin', 'movie-enter'];
+
+            categories.forEach(category => {
+                const categoryElement = document.createElement('option');
+                categoryElement.textContent= category;
+                categoryElement.value= category;
+                document.getElementById('categorySelect').appendChild(categoryElement);
+            });
+        }
+
+        /* リクエスト処理 */
+        document.getElementById('queryForm').addEventListener('submit', function(event) {
+            event.preventDefault(); // フォームのデフォルト送信をキャンセル
+
+            var sentence = document.getElementById('sentenceInput').value;
+            var category = document.getElementById('categorySelect').value;
+            var xhr = new XMLHttpRequest(); // XMLHttpRequest オブジェクトの作成
+            xhr.open('GET',
+                '/embed?sentence=' + encodeURIComponent(sentence)
+                + '&filter_category=' + encodeURIComponent(category), true);
+
+            xhr.onload = function() {
+                if (xhr.status >= 200 && xhr.status < 300) {
+                    // リクエスト成功。ここに結果を表示する処理を書く
+                    displayResults(JSON.parse(xhr.responseText));
+                } else {
+                    // リクエスト失敗
+                    console.error('Error: ', xhr.statusText);
+                }
+            };
+
+            xhr.onerror = function() {
+                console.error('Request failed');
+            };
+
+            xhr.send(); // リクエストの送信
+        });
+    </script>
 </body>
 </html>
 
