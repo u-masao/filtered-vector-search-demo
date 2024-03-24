@@ -1,4 +1,5 @@
 import logging
+import re
 import time
 
 import qdrant_client
@@ -41,12 +42,30 @@ async def startup_event():
     # ここでモデルをプリロードするなどの初期化処理を行うことができます。
 
 
+def remove_non_numerics(s):
+    return re.sub(r"[^0-9,]", "", s)
+
+
 # Qdrant への問い合わせ
 def search(
-    query_vector, with_vectors=False, with_payload=False, filter_category=None
+    query_vector=None,
+    ids: str = "",
+    with_vectors=False,
+    with_payload=False,
+    filter_category=None,
 ):
+    print(ids)
+    print(type(ids))
     # search
     ts = time.perf_counter()
+
+    ids = remove_non_numerics(ids)
+    if ids != "":
+        embed_ids = client.retrieve(
+            collection_name=config["collection_name"],
+            ids=[int(x) for x in ids.split(",")],
+        )
+        print(embed_ids)
 
     query_filter = None
     if filter_category is not None:
@@ -58,6 +77,7 @@ def search(
                 ),
             ],
         )
+
     search_result = client.search(
         collection_name=config["collection_name"],
         query_vector=query_vector,
@@ -67,24 +87,45 @@ def search(
         with_vectors=with_vectors,
         with_payload=with_payload,
     )
-    search_elapsed_time = time.perf_counter() - ts
-    return {"items": search_result, "search_elapsed_time": search_elapsed_time}
+    qdrant_response_time = time.perf_counter() - ts
+    return {
+        "items": search_result,
+        "qdrant_response_time": qdrant_response_time,
+    }
 
 
-@app.get("/embed")
+@app.get("/search")
 async def get_embedding(
-    sentence: str,
+    sentence: str = "",
+    ids: str = "",
     with_vectors: bool = False,
     with_payload: bool = False,
     filter_category: str = None,
 ):
+    # フィルタ文字列がない場合の処理
     if filter_category == "":
         filter_category = None
 
-    embedding = model.encode(sentence)
-    return search(
+    # 埋め込み表現を取得
+    start_ts = time.perf_counter()
+    if sentence != "":
+        embedding = model.encode(sentence)
+        embedding_time = time.perf_counter() - start_ts
+    else:
+        embedding = None
+        embedding_time = None
+
+    # 検索
+    result = search(
         embedding,
+        ids=ids,
         with_vectors=with_vectors,
         with_payload=with_payload,
         filter_category=filter_category,
     )
+    total_time = time.perf_counter() - start_ts
+
+    # 結果を返す
+    result["embedding_time"] = embedding_time
+    result["total_time"] = total_time
+    return result

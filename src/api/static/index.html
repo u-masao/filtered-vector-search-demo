@@ -26,15 +26,29 @@
     <script>
 
         function displayResults(response) {
-            console.log(response);
-            var html = '<ul class="item-list">';
+            var html = '';
+
+            html += '<p>total: ' + response.total_time+ ' 秒</p>';
+            html += '<p>embedding: ' + response.embedding_time+ ' 秒</p>';
+            html += '<p>qdrant: ' + response.qdrant_response_time+ ' 秒</p>';
+
+            html += '<ul class="item-list">';
             for ( var i = 0 ;i<response.items.length; i++){
                 html += '<li>';
-                html += Object.keys(response.items[i]);
-                html += response.items[i].id;
+                // html += '<div>'+ Object.keys(response.items[i]) + '</div>';
+                html += '<div>'+ response.items[i].id +'</div>';
+                html += '<div>'+ response.items[i].score +'</div>';
+                // html += '<div>'+ response.items[i].vector +'</div>';
+                html += '<div>'+ response.items[i].payload +'</div>';
+                html += '<div>'+ Object.keys(response.items[i].payload) +'</div>';
+                html += '<div>'+ response.items[i].payload.category +'</div>';
+                html += '<div>'+ response.items[i].payload.url+'</div>';
+                html += '<div>'+ response.items[i].payload.sentence_length+'</div>';
+                html += '<div>'+ response.items[i].payload.title_summary+'</div>';
                 html += '</li>';
             }
             html += '</ul>';
+
             document.getElementById('results').innerHTML = html;
         }
 
@@ -60,8 +74,11 @@
             var category = document.getElementById('categorySelect').value;
             var xhr = new XMLHttpRequest(); // XMLHttpRequest オブジェクトの作成
             xhr.open('GET',
-                '/embed?sentence=' + encodeURIComponent(sentence)
-                + '&filter_category=' + encodeURIComponent(category), true);
+                '/search?sentence=' + encodeURIComponent(sentence)
+                + '&filter_category=' + encodeURIComponent(category)
+                + '&with_payload=true'
+                + '&with_vectors=true'
+                , true);
 
             xhr.onload = function() {
                 if (xhr.status >= 200 && xhr.status < 300) {
