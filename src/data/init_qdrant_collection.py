@@ -33,9 +33,15 @@ def load_dataset(text_filepath, embeds_filepath):
 
 def build_features(text_df):
 
-    text_df = text_df.with_columns(
-        text_df["sentence"].str.len_bytes().alias("sentence_length")
-    ).with_columns(text_df["title"].str.slice(0, 40).alias("title_summary"))
+    text_df = (
+        text_df.with_columns(
+            text_df["sentence"].str.len_bytes().alias("sentence_length")
+        )
+        .with_columns(text_df["title"].str.slice(0, 40).alias("title_summary"))
+        .with_columns(
+            text_df["sentence"].str.slice(0, 300).alias("sentence_summary")
+        )
+    )
     return text_df
 
 
@@ -86,6 +92,7 @@ def init_qdrant_collection(kwargs):
                 "date",
                 "category",
                 "title_summary",
+                "sentence_summary",
                 "sentence_length",
                 "url",
             ]
