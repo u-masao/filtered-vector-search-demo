@@ -12,9 +12,9 @@
 <body>
     <h1>Filtered Vector Search Demo</h1>
     <form id="queryForm">
-        <button type="submit">送信</button>
         <label for="sentenceInput">検索文字列:</label>
-        <input type="text" id="sentenceInput" name="sentence">
+        <input type="search" id="sentenceInput" name="sentence">
+        <button type="submit">送信</button>
         <label for="categorySelect">カテゴリ:</label>
         <select id="categorySelect" onchange="search()">
             <option value="">カテゴリを絞り込むことができます</option>
@@ -22,17 +22,18 @@
     </form>
     <div id="query_example">
         <span>サンプルクエリ:</span>
+        <a onclick="set_query_string('チョコレート')">チョコレート</a>
         <a onclick="set_query_string('サッカー')">サッカー</a>
         <a onclick="set_query_string('スマホ')">スマホ</a>
         <a onclick="set_query_string('音楽')">音楽</a>
         <a onclick="set_query_string('Music')">Music</a>
-        <a onclick="set_query_string('機械学習')">機械学習</a>
     <div>
     <div id="like_ids"></div>
     <div id="results"></div>
 
     <script>
         var likeIds = new Set();
+        var likeTitle = new Object();
 
         function set_query_string(query) {
             document.getElementById('sentenceInput').value=query;
@@ -40,7 +41,7 @@
         }
 
         function displayResults(response) {
-            var html = '';
+            var html = '<h3>検索結果</h3>';
 
             html += '<table>';
             html += '<tr><th>total</th><td>' + (response.total_time*1000).toPrecision(3)+ ' msec</td></tr>';
@@ -50,17 +51,20 @@
 
             html += '<ul class="item-list">';
             for ( var i = 0 ;i<response.items.length; i++){
+                var item = response.items[i];
                 html += '<li>';
-                html += '<div>'+ response.items[i].payload.sentence_summary+'</div>';
-                html +='<div><a onclick="append_like_id('+response.items[i].id+')">append to like '+response.items[i].id+'</a></div>';
+                html += '<div>'+ item.payload.sentence_summary+'</div>';
+                html += '<div>';
+                html += '<a onclick=\'append_like_id('+item.id+',"'+item.payload.title_summary+'")\'>append to like '+item.id+'</a>';
+                html += '<a href="'+item.payload.url+'" target="_brank"> →  link</a>';
+                html += '</div>';
                 html += '<div>';
                 html += 'info:{';
-                html += 'id: '+ response.items[i].id +', ';
-                html += 'score: '+ response.items[i].score +', ';
-                html += 'category: '+ response.items[i].payload.category +', ';
-                html += 'length: '+ response.items[i].payload.sentence_length+', ';
+                html += 'id: '+ item.id +', ';
+                html += 'score: '+ item.score +', ';
+                html += 'category: '+ item.payload.category +', ';
+                html += 'length: '+ item.payload.sentence_length+', ';
                 html += '}</div>';
-                html += '<div><a href="'+ response.items[i].payload.url+'" target="_blank">link</a></div>';
                 html += '</li>';
 
             }
@@ -69,17 +73,18 @@
             document.getElementById('results').innerHTML = html;
         }
         function update_like_ids() {
-            html = "";
+            html = "<h3>お気に入り</h3>";
             likeIds.forEach(id =>{
-                html += '<div><a onclick="remove_like_id('+id+')">remove '+id+'</a></div>'
+                html += '<div><a onclick="remove_like_id('+id+')">';
+                html += id+': '+likeTitle[id]+'(remove)</a></div>';
             });
             document.getElementById('like_ids').innerHTML = html;
-            console.log(likeIds);
             search();
         }
 
-        function append_like_id(id) {
+        function append_like_id(id, title) {
             likeIds.add(id);
+            likeTitle[id]=title;
             update_like_ids();
         }
 
