@@ -80,7 +80,7 @@ def search(
         if query_vector is None:
             query_vector = embed_ids
         else:
-            query_vector = (query_vector + embed_ids) / 2.0
+            query_vector = query_vector + embed_ids * 0.3
 
     query_filter = None
     if filter_category is not None:
@@ -116,7 +116,7 @@ async def get_embedding(
     with_vectors: bool = False,
     with_payload: bool = False,
     filter_category: str = None,
-    limit: int=5,
+    limit: int = 5,
 ):
     # フィルタ文字列がない場合の処理
     if filter_category == "":
