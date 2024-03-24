@@ -44,7 +44,7 @@ check_commit:
 
 ## PIPELINE.md
 PIPELINE.md: dvc.yaml params.yaml
-	poetry run dvc dag -md > PIPELINE.md
+	poetry run dvc dag --md > PIPELINE.md
 	git commit PIPELINE.md -m '[update] dvc pipeline update' || true
 
 #################################################################################
