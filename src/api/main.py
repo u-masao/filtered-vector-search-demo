@@ -3,6 +3,7 @@ import re
 import time
 
 import numpy as np
+import polars as pl
 import qdrant_client
 from fastapi import FastAPI
 from fastapi.responses import RedirectResponse
@@ -18,6 +19,9 @@ app = FastAPI()
 
 # add static contents
 app.mount("/static", StaticFiles(directory="static", html=True), name="static")
+
+# load text
+text_df = pl.read_parquet("../../data/raw/sentences-limit-0.parquet")
 
 
 @app.get("/")
@@ -107,6 +111,12 @@ def search(
         "items": search_result,
         "qdrant_response_time": qdrant_response_time,
     }
+
+
+@app.get("/item")
+async def get_item(id: int):
+    result = text_df.filter(pl.col("id") == id).to_dicts()
+    return result
 
 
 @app.get("/search")
