@@ -2,6 +2,7 @@ import logging
 import re
 import time
 
+import numpy as np
 import qdrant_client
 from fastapi import FastAPI
 from fastapi.responses import RedirectResponse
@@ -53,19 +54,33 @@ def search(
     with_vectors=False,
     with_payload=False,
     filter_category=None,
+    limit=5,
 ):
-    print(ids)
-    print(type(ids))
+
+    if (query_vector is None) and ids == "":
+        return {
+            "items": None,
+            "qdrant_response_time": None,
+        }
     # search
     ts = time.perf_counter()
 
     ids = remove_non_numerics(ids)
     if ids != "":
-        embed_ids = client.retrieve(
+        result_ids = client.retrieve(
             collection_name=config["collection_name"],
             ids=[int(x) for x in ids.split(",")],
+            with_vectors=True,
+            with_payload=False,
         )
-        print(embed_ids)
+        embed_ids = []
+        if len(result_ids) > 0:
+            [embed_ids.append(x.vector) for x in result_ids]
+            embed_ids = np.average(np.array(embed_ids), axis=0)
+        if query_vector is None:
+            query_vector = embed_ids
+        else:
+            query_vector = (query_vector + embed_ids) / 2.0
 
     query_filter = None
     if filter_category is not None:
@@ -82,7 +97,7 @@ def search(
         collection_name=config["collection_name"],
         query_vector=query_vector,
         query_filter=query_filter,
-        limit=5,
+        limit=limit,
         search_params=models.SearchParams(hnsw_ef=128, exact=False),
         with_vectors=with_vectors,
         with_payload=with_payload,
@@ -101,6 +116,7 @@ async def get_embedding(
     with_vectors: bool = False,
     with_payload: bool = False,
     filter_category: str = None,
+    limit: int=5,
 ):
     # フィルタ文字列がない場合の処理
     if filter_category == "":
@@ -122,6 +138,7 @@ async def get_embedding(
         with_vectors=with_vectors,
         with_payload=with_payload,
         filter_category=filter_category,
+        limit=limit,
     )
     total_time = time.perf_counter() - start_ts
 
