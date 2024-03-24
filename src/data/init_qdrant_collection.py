@@ -35,7 +35,7 @@ def build_features(text_df):
 
     text_df = text_df.with_columns(
         text_df["sentence"].str.len_bytes().alias("sentence_length")
-    ).with_columns(text_df["title"].str.slice(0, 20).alias("title_summary"))
+    ).with_columns(text_df["title"].str.slice(0, 40).alias("title_summary"))
     return text_df
 
 
