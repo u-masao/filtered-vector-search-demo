@@ -81,7 +81,13 @@ def init_qdrant_collection(kwargs):
         collection_name=kwargs["collection_name"],
         ids=text_df["id"],
         payload=text_df[
-            ["date", "category", "title_summary", "sentence_length", "url"]
+            [
+                "date",
+                "category",
+                "title_summary",
+                "sentence_length",
+                "url",
+            ]
         ].to_dicts(),
         vectors=embeds,
         parallel=4,
