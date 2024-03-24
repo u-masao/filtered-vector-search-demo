@@ -1,5 +1,13 @@
 .item-list li {
     background: #333;
+    list-style: none;
+    max-width: 20em;
+    display: inline-block;
+    margin: 10px;
+}
+.item-list li div {
+    display:inline-block;
+    margin: 5px;
 }
 body {
     max-width: 90%;
