@@ -82,6 +82,7 @@ def init_qdrant_collection(kwargs):
         ids=text_df["id"],
         payload=text_df[
             [
+                "id",
                 "date",
                 "category",
                 "title_summary",
@@ -97,6 +98,7 @@ def init_qdrant_collection(kwargs):
 
     # create payload index
     for name, schema in [
+        ["id", "integer"],
         ["date", "datetime"],
         ["title", "text"],
         ["sentence_length", "integer"],
