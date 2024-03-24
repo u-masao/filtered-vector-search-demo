@@ -30,6 +30,7 @@
     <div>
     <div id="like_ids"></div>
     <div id="results"></div>
+    <div id="item_detail"></div>
 
     <script>
         var likeIds = new Set();
@@ -40,6 +41,26 @@
             search();
         }
 
+        function close_item_detail() {
+            document.getElementById('item_detail').style.display='none';
+            document.getElementById('item_detail').innerHTML='';
+        }
+
+        function displayItem(response) {
+            var id = response[0].id;
+            var html='';
+            html += '<p><a onclick="close_item_detail()">閉じる</a></p>';
+            html += '<div>'+response[0].title+'</div>';
+            html += '<div>'+response[0].content+'</div>';
+            html += '<div>'+response[0].category+'</div>';
+            html += '<div>'+response[0].id+'</div>';
+            html += '<div>'+response[0].date+'</div>';
+            html += '<div>'+response[0].url+'</div>';
+            html += '<p><a onclick="close_item_detail()">閉じる</a></p>';
+
+            document.getElementById('item_detail').style.display='block';
+            document.getElementById('item_detail').innerHTML=html;
+        }
         function displayResults(response) {
             var html = '<h3>検索結果</h3>';
 
@@ -52,11 +73,11 @@
             html += '<ul class="item-list">';
             for ( var i = 0 ;i<response.items.length; i++){
                 var item = response.items[i];
-                html += '<li>';
-                html += '<div>'+ item.payload.sentence_summary+'</div>';
+                html += '<li id="article_'+item.id+'">';
+                html += '<div><a onclick="getItem('+item.id+')">'+ item.payload.sentence_summary+'...</a></div>';
                 html += '<div>';
-                html += '<a onclick=\'append_like_id('+item.id+',"'+item.payload.title_summary+'")\'>append to like '+item.id+'</a>';
-                html += '<a href="'+item.payload.url+'" target="_brank"> →  link</a>';
+                html += '<a onclick=\'append_like_id('+item.id+',"'+item.payload.title_summary+'")\'>like </a>';
+                html += '<a href="'+item.payload.url+'" target="_brank"> link</a>';
                 html += '</div>';
                 html += '<div>';
                 html += 'info:{';
@@ -72,6 +93,8 @@
 
             document.getElementById('results').innerHTML = html;
         }
+
+
         function update_like_ids() {
             html = "<h3>お気に入り</h3>";
             likeIds.forEach(id =>{
@@ -107,6 +130,27 @@
             });
 
             update_like_ids();
+            close_item_detail();
+        }
+
+        function getItem(id) {
+            var xhr = new XMLHttpRequest(); // XMLHttpRequest オブジェクトの作成
+            xhr.open('GET',
+                '/item?id=' + encodeURIComponent(id)
+                , true);
+            xhr.onload = function() {
+                if (xhr.status >= 200 && xhr.status < 300) {
+                    // リクエスト成功。ここに結果を表示する処理を書く
+                    displayItem(JSON.parse(xhr.responseText));
+                } else {
+                    // リクエスト失敗
+                    console.error('Error: ', xhr.statusText);
+                }
+            };
+            xhr.onerror = function() {
+                console.error('Request failed');
+            };
+            xhr.send(); // リクエストの送信
         }
 
         /* リクエスト処理 */

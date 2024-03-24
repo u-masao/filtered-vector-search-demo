@@ -12,3 +12,13 @@
 body {
     max-width: 90%;
 }
+#item_detail {
+    position: absolute;
+    top: 10%;
+    left: 10%;
+    width: 80%;
+    background: #111;
+    z-index: 10000;
+    padding:20px;
+}
+
