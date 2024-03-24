@@ -15,10 +15,10 @@ stages:
       size: 29648264
     - path: src/data/init_qdrant_collection.py
       hash: md5
-      md5: 572240d9d514063286d9a8f50d85cd08
-      size: 5069
+      md5: 0ee95e1c9dadeebe19599c45a2ebb4b8
+      size: 4956
     outs:
     - path: data/interim/qdrant_collection_status.json
       hash: md5
-      md5: f779d97a6926e3be66152c93f79c3efd
-      size: 145
+      md5: 7970ea8ccdf909df5e85c705aa23c427
+      size: 144
