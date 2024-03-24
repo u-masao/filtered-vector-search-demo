@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <link rel="stylesheet" href="https://unpkg.com/sakura.css/css/sakura.css" media="screen" />
-    <link rel="stylesheet" href="https://unpkg.com/sakura.css/css/sakura-dark.css" media="screen and (prefers-color-scheme: dark)" />
+    <link rel="stylesheet" href="css/sakura.css" media="screen" />
+    <link rel="stylesheet" href="css/sakura-dark.css" media="screen and (prefers-color-scheme: dark)" />
     <link rel="stylesheet" href="css/custom.css" />
     <link rel="shortcut icon" type="image/x-icon" href="favicon.ico" />
     <meta charset="UTF-8">
@@ -12,44 +12,80 @@
 <body>
     <h1>Filtered Vector Search Demo</h1>
     <form id="queryForm">
+        <button type="submit">送信</button>
         <label for="sentenceInput">検索文字列:</label>
         <input type="text" id="sentenceInput" name="sentence">
         <label for="categorySelect">カテゴリ:</label>
-        <select id="categorySelect">
+        <select id="categorySelect" onchange="search()">
             <option value="">カテゴリを絞り込むことができます</option>
-
         </select>
-        <button type="submit">送信</button>
     </form>
+    <div id="query_example">
+        <span>サンプルクエリ:</span>
+        <a onclick="set_query_string('サッカー')">サッカー</a>
+        <a onclick="set_query_string('スマホ')">スマホ</a>
+        <a onclick="set_query_string('音楽')">音楽</a>
+        <a onclick="set_query_string('Music')">Music</a>
+        <a onclick="set_query_string('機械学習')">機械学習</a>
+    <div>
+    <div id="like_ids"></div>
     <div id="results"></div>
 
     <script>
+        var likeIds = new Set();
+
+        function set_query_string(query) {
+            document.getElementById('sentenceInput').value=query;
+            search();
+        }
 
         function displayResults(response) {
             var html = '';
 
-            html += '<p>total: ' + response.total_time+ ' 秒</p>';
-            html += '<p>embedding: ' + response.embedding_time+ ' 秒</p>';
-            html += '<p>qdrant: ' + response.qdrant_response_time+ ' 秒</p>';
+            html += '<table>';
+            html += '<tr><th>total</th><td>' + (response.total_time*1000).toPrecision(3)+ ' msec</td></tr>';
+            html += '<tr><th>embedding</th><td>' + (response.embedding_time*1000).toPrecision(3)+ ' msec</td></tr>';
+            html += '<tr><th>qdrant query</th><td>' + (response.qdrant_response_time*1000).toPrecision(3)+ ' msec</td></tr>';
+            html += '</table>';
 
             html += '<ul class="item-list">';
             for ( var i = 0 ;i<response.items.length; i++){
                 html += '<li>';
-                // html += '<div>'+ Object.keys(response.items[i]) + '</div>';
-                html += '<div>'+ response.items[i].id +'</div>';
-                html += '<div>'+ response.items[i].score +'</div>';
-                // html += '<div>'+ response.items[i].vector +'</div>';
-                html += '<div>'+ response.items[i].payload +'</div>';
-                html += '<div>'+ Object.keys(response.items[i].payload) +'</div>';
-                html += '<div>'+ response.items[i].payload.category +'</div>';
-                html += '<div>'+ response.items[i].payload.url+'</div>';
-                html += '<div>'+ response.items[i].payload.sentence_length+'</div>';
                 html += '<div>'+ response.items[i].payload.title_summary+'</div>';
+                html +='<div><a onclick="append_like_id('+response.items[i].id+')">append to like '+response.items[i].id+'</a></div>';
+                html += '<div>';
+                html += 'info:{';
+                html += 'id: '+ response.items[i].id +', ';
+                html += 'score: '+ response.items[i].score +', ';
+                html += 'category: '+ response.items[i].payload.category +', ';
+                html += 'length: '+ response.items[i].payload.sentence_length+', ';
+                html += '}</div>';
+                html += '<div><a href="'+ response.items[i].payload.url+'" target="_blank">link</a></div>';
                 html += '</li>';
+
             }
             html += '</ul>';
 
             document.getElementById('results').innerHTML = html;
+        }
+        function update_like_ids() {
+            html = "";
+            likeIds.forEach(id =>{
+                html += '<div><a onclick="remove_like_id('+id+')">remove '+id+'</a></div>'
+            });
+            document.getElementById('like_ids').innerHTML = html;
+            console.log(likeIds);
+            search();
+        }
+
+        function append_like_id(id) {
+            likeIds.add(id);
+            update_like_ids();
+        }
+
+        function remove_like_id(id) {
+            likeIds.delete(id);
+            update_like_ids();
         }
 
         /* 初期化 */
@@ -64,12 +100,12 @@
                 categoryElement.value= category;
                 document.getElementById('categorySelect').appendChild(categoryElement);
             });
+
+            update_like_ids();
         }
 
         /* リクエスト処理 */
-        document.getElementById('queryForm').addEventListener('submit', function(event) {
-            event.preventDefault(); // フォームのデフォルト送信をキャンセル
-
+        function search() {
             var sentence = document.getElementById('sentenceInput').value;
             var category = document.getElementById('categorySelect').value;
             var xhr = new XMLHttpRequest(); // XMLHttpRequest オブジェクトの作成
@@ -77,9 +113,10 @@
                 '/search?sentence=' + encodeURIComponent(sentence)
                 + '&filter_category=' + encodeURIComponent(category)
                 + '&with_payload=true'
-                + '&with_vectors=true'
+                + '&with_vectors=false'
+                + '&ids=' + Array.from(likeIds).join(',')
+                + '&limit=20'
                 , true);
-
             xhr.onload = function() {
                 if (xhr.status >= 200 && xhr.status < 300) {
                     // リクエスト成功。ここに結果を表示する処理を書く
@@ -89,12 +126,15 @@
                     console.error('Error: ', xhr.statusText);
                 }
             };
-
             xhr.onerror = function() {
                 console.error('Request failed');
             };
-
             xhr.send(); // リクエストの送信
+        }
+
+        document.getElementById('queryForm').addEventListener('submit', function(event) {
+            event.preventDefault(); // フォームのデフォルト送信をキャンセル
+            search();
         });
     </script>
 </body>
