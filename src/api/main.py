@@ -3,11 +3,25 @@ import time
 
 import qdrant_client
 from fastapi import FastAPI
+from fastapi.responses import RedirectResponse
+from fastapi.staticfiles import StaticFiles
 from qdrant_client.http import models
 from sentence_transformers import SentenceTransformer
 
+# configuration
+config = {"collection_name": "livedoor_news"}
+
 # FastAPI アプリケーションの作成
 app = FastAPI()
+
+# add static contents
+app.mount("/static", StaticFiles(directory="static", html=True), name="static")
+
+
+@app.get("/")
+async def redirect_to_index():
+    return RedirectResponse(url="/static/index.html")
+
 
 # SentenceTransformerモデルの初期化
 model = SentenceTransformer("intfloat/multilingual-e5-small")
@@ -18,9 +32,16 @@ client = qdrant_client.QdrantClient(
     port=6333,
 )
 
-config = {"collection_name": "livedoor_news"}
+
+# モデルの初期化処理
+@app.on_event("startup")
+async def startup_event():
+    logger = logging.getLogger(__name__)
+    logger.info("モデルを初期化します。")
+    # ここでモデルをプリロードするなどの初期化処理を行うことができます。
 
 
+# Qdrant への問い合わせ
 def search(query_vector, with_vectors=False, with_payload=False):
     logger = logging.getLogger(__name__)
     # search
@@ -47,16 +68,7 @@ def search(query_vector, with_vectors=False, with_payload=False):
     return search_result
 
 
-@app.on_event("startup")
-async def startup_event():
-    logger = logging.getLogger(__name__)
-    logger.info("モデルを初期化します。")
-    # ここでモデルをプリロードするなどの初期化処理を行うことができます。
-
-
 @app.get("/embed")
 async def get_embedding(sentence: str):
-    # 文章の埋め込みを取得
     embedding = model.encode(sentence)
-    # return {"embedding": embedding.tolist()}
     return search(embedding)
