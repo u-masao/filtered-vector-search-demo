@@ -35,15 +35,8 @@ def build_features(text_df):
 
     text_df = text_df.with_columns(
         text_df["sentence"].str.len_bytes().alias("sentence_length")
-    )
+    ).with_columns(text_df["title"].str.slice(0, 20).alias("title_summary"))
     return text_df
-
-
-def make_payload(df):
-    logger = logging.getLogger(__name__)
-    result = df[["date", "title", "sentence_length"]].to_dicts()
-    logger.info(f"payload: \n{result[:5]}")
-    return result
 
 
 def init_qdrant_collection(kwargs):
@@ -88,7 +81,7 @@ def init_qdrant_collection(kwargs):
         collection_name=kwargs["collection_name"],
         ids=text_df["id"],
         payload=text_df[
-            ["date", "category", "title", "sentence_length"]
+            ["date", "category", "title_summary", "sentence_length"]
         ].to_dicts(),
         vectors=embeds,
         parallel=4,
