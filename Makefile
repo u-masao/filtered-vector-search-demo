@@ -33,8 +33,19 @@ ui:
 	poetry run python -m src/visualization/visualize.py
 
 ## run pipeline
-repro:
+repro: check_commit PIPELINE.md
 	poetry run dvc repro
+	git commit dvc.lock -m '[update] dvc repro' || true
+
+## check commit
+check_commit:
+	git diff --exit-code --staged
+	git diff --exit-code
+
+## PIPELINE.md
+PIPELINE.md: dvc.yaml params.yaml
+	poetry run dvc dag -md > PIPELINE.md
+	git commit PIPELINE.md -m '[update] dvc pipeline update' || true
 
 #################################################################################
 # PROJECT RULES                                                                 #
