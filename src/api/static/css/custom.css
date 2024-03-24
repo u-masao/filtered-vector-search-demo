@@ -1,3 +1,6 @@
 .item-list li {
     background: #333;
 }
+body {
+    max-width: 90%;
+}
