@@ -51,7 +51,7 @@
             html += '<ul class="item-list">';
             for ( var i = 0 ;i<response.items.length; i++){
                 html += '<li>';
-                html += '<div>'+ response.items[i].payload.title_summary+'</div>';
+                html += '<div>'+ response.items[i].payload.sentence_summary+'</div>';
                 html +='<div><a onclick="append_like_id('+response.items[i].id+')">append to like '+response.items[i].id+'</a></div>';
                 html += '<div>';
                 html += 'info:{';
